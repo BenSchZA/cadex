@@ -8,16 +8,6 @@ defmodule Marbles do
   Documentation for Marbles.
   """
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Marbles.hello()
-      :world
-
-  """
-
   ### GenServer API
 
   @doc """
@@ -41,11 +31,6 @@ defmodule Marbles do
   @doc """
   GenServer.handle_call/3 callback
   """
-  # def handle_call(:dequeue, _from, [value | state]) do
-  #   {:reply, value, state}
-  # end
-
-  # def handle_call(:dequeue, _from, []), do: {:reply, nil, []}
 
   def handle_call(:state, _from, state), do: {:reply, state, state}
 
