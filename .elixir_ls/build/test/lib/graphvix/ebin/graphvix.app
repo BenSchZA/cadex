@@ -1,0 +1,11 @@
+{application,graphvix,
+             [{applications,[kernel,stdlib,elixir,logger,stream_data]},
+              {description,"Elixir interface for Graphviz"},
+              {modules,['Elixir.Graphvix','Elixir.Graphvix.DotHelpers',
+                        'Elixir.Graphvix.Graph','Elixir.Graphvix.HTMLRecord',
+                        'Elixir.Graphvix.Record',
+                        'Elixir.Graphvix.Record.Port',
+                        'Elixir.Graphvix.RecordSubset',
+                        'Elixir.Graphvix.Subgraph']},
+              {registered,[]},
+              {vsn,"1.0.0"}]}.

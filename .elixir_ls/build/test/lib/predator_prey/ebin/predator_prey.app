@@ -1,0 +1,9 @@
+{application,predator_prey,
+             [{applications,[kernel,stdlib,elixir,logger,exprof,flow,
+                             graphvix]},
+              {description,"predator_prey"},
+              {modules,['Elixir.ExampleQueue','Elixir.PredatorPrey',
+                        'Elixir.PredatorPrey.Application']},
+              {registered,[]},
+              {vsn,"0.1.0"},
+              {mod,{'Elixir.PredatorPrey.Application',[]}}]}.
