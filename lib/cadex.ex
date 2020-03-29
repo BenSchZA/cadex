@@ -2,11 +2,19 @@ defmodule State do
   defstruct previous: %{}, current: %{}, delta: %{}
 end
 
-defmodule Marbles do
+defmodule StateUpdateParams do
+  defstruct params: %{}, substep: -1, sH: [%State{}], s: %State{}, input: %{}
+end
+
+defmodule PolicyParams do
+  defstruct params: %{}, substep: %{}, sH: [%State{}], s: %State{}
+end
+
+defmodule Cadex do
   use GenServer
 
   @moduledoc """
-  Documentation for Marbles.
+  Documentation for Cadex.
   """
 
   ### GenServer API
@@ -21,7 +29,7 @@ defmodule Marbles do
   """
   def child_spec(opts) do
     %{
-      id: Marbles,
+      id: Cadex,
       start: {__MODULE__, :start_link, [opts]},
       shutdown: 5_000,
       restart: :temporary,
@@ -41,7 +49,7 @@ defmodule Marbles do
 
   def handle_cast(
         {:update, var},
-        state = %State{previous: _previous, current: current, delta: delta}
+        state = %State{previous: _, current: current, delta: delta}
       )
       when var == :box_A do
     increment =
@@ -63,7 +71,7 @@ defmodule Marbles do
 
   def handle_cast(
         {:update, var},
-        state = %State{previous: _previous, current: current, delta: delta}
+        state = %State{previous: _, current: current, delta: delta}
       )
       when var == :box_B do
     increment =

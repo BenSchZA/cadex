@@ -6,9 +6,9 @@ Mnesia.create_table(State, [attributes: [:id, :tick, :index, :current]])
 
 ###
 
-state = %State{previous: _previous, current: _current} = Marbles.state
-Marbles.update(var)
-_state_ = %State{previous: _previous_, current: current_} = Marbles.state
+state = %State{previous: _previous, current: _current} = Cadex.state
+Cadex.update(var)
+_state_ = %State{previous: _previous_, current: current_} = Cadex.state
 
 Mnesia.dirty_write({
   State,
@@ -44,3 +44,25 @@ data = variables
 |> Enum.map(fn({_var, index}) ->
   Mnesia.transaction(fn -> Mnesia.match_object({State, tick, index, :_}) end)
 end)
+
+
+
+
+# delta_ = %{var => increment}
+
+# state
+# |> update_in([Access.key!(:delta), Access.key!(var)], fn(var) ->
+#   increment
+# end)
+
+# state
+# |> struct(%{delta: delta_})
+
+{
+  :noreply,
+
+  state
+  |> update_in([Access.key!(:delta), Access.key!(var)], fn ->
+    increment
+  end)
+}

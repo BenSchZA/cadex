@@ -1,9 +1,9 @@
-defmodule Main.MixProject do
+defmodule Cadex.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :main,
+      app: :cadex,
       version: "0.1.0",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
@@ -15,7 +15,7 @@ defmodule Main.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {Main.Application, []}
+      mod: {Cadex.Application, []}
     ]
   end
 

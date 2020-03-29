@@ -1,6 +1,6 @@
-defmodule MarblesTest do
+defmodule CadexTest do
   use ExUnit.Case, async: true
-  doctest Marbles
+  doctest Cadex
 
   @initial_conditions %{
     box_A: 11,
@@ -30,7 +30,7 @@ defmodule MarblesTest do
 
   setup do
     {:ok, pid} =
-      Marbles.start_link(%State{
+      Cadex.start_link(%State{
         current: @initial_conditions
       })
 
@@ -38,7 +38,7 @@ defmodule MarblesTest do
   end
 
   test "initial state" do
-    state = Marbles.state()
+    state = Cadex.state()
 
     assert %State{
              previous: %{},
@@ -48,8 +48,8 @@ defmodule MarblesTest do
   end
 
   test "update A" do
-    Marbles.update(:box_A)
-    state = Marbles.state()
+    Cadex.update(:box_A)
+    state = Cadex.state()
 
     assert %State{
              previous: %{},
@@ -61,8 +61,8 @@ defmodule MarblesTest do
   end
 
   test "update B" do
-    Marbles.update(:box_B)
-    state = Marbles.state()
+    Cadex.update(:box_B)
+    state = Cadex.state()
 
     assert %State{
              previous: %{},
@@ -74,25 +74,25 @@ defmodule MarblesTest do
   end
 
   test "apply delta", context do
-    Marbles.update(:box_A)
-    Marbles.update(:box_B)
+    Cadex.update(:box_A)
+    Cadex.update(:box_B)
     apply_delta(context[:pid], get_variables())
 
     assert %State{
              previous: %{box_A: 11, box_B: 0},
              current: %{box_A: 10, box_B: 1},
              delta: %{}
-           } == Marbles.state()
+           } == Cadex.state()
 
-    Marbles.update(:box_A)
-    Marbles.update(:box_B)
+    Cadex.update(:box_A)
+    Cadex.update(:box_B)
     apply_delta(context[:pid], get_variables())
 
     assert %State{
              previous: %{box_A: 10, box_B: 1},
              current: %{box_A: 9, box_B: 2},
              delta: %{}
-           } == Marbles.state()
+           } == Cadex.state()
   end
 
   def get_variables do
@@ -101,12 +101,13 @@ defmodule MarblesTest do
   end
 
   def apply_delta(pid, variables) do
-    %State{previous: _, current: current, delta: _} = Marbles.state()
+    %State{previous: _, current: current, delta: _} = Cadex.state()
     :sys.replace_state(pid, &Map.put(&1, :previous, current))
 
     variables
     |> Enum.each(fn var ->
-      %State{previous: _, current: current, delta: delta} = Marbles.state()
+      %State{previous: _, current: current, delta: delta} = Cadex.state()
+
       current_ = Map.update(current, var, nil, &delta[var].(&1))
       :sys.replace_state(pid, &Map.put(&1, :current, current_))
     end)
@@ -122,7 +123,10 @@ defmodule MarblesTest do
         :nothing
 
       _ = _tick ->
-        Enum.each(variables, &Marbles.update(&1))
+        variables
+        |> Enum.each(&Cadex.update(&1))
+
+        IO.inspect Cadex.state()
 
         apply_delta(context[:pid], variables)
     end)
