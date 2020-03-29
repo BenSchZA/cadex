@@ -2,6 +2,8 @@ defmodule MarblesTest do
   use ExUnit.Case, async: true
   doctest Marbles
 
+  alias :mnesia, as: Mnesia
+
   @initial_conditions %{
     box_A: 11,
     box_B: 0
@@ -24,6 +26,10 @@ defmodule MarblesTest do
   }
 
   setup_all do
+    Mnesia.create_schema([node()])
+    Mnesia.start()
+    Mnesia.create_table(State, [attributes: [:id, :tick, :index, :current]])
+
     IO.inspect @partial_state_update_blocks
     :ok
   end
@@ -61,19 +67,54 @@ defmodule MarblesTest do
     }
   end
 
-  test "ticks", _context do
+  test "ticks", context do
     [head | _tail] = @partial_state_update_blocks
     variables = IO.inspect head[:variables]
     ticks = IO.inspect @simulation_parameters[:T]
     Enum.each(0..ticks, fn
       0 -> :nothing
-      _ ->
-        # state = IO.inspect Marbles.state
-        variables |> Enum.each(fn x ->
-          IO.inspect x
-          Marbles.update(x)
+      _ = tick ->
+        variables
+        |> Enum.with_index
+        |> Enum.each(fn({var, index}) ->
+          IO.inspect var
+
+          state = %State{previous: _previous, current: _current} = Marbles.state
+          Marbles.update(var)
+          _state_ = %State{previous: _previous_, current: current_} = Marbles.state
+
+          Mnesia.dirty_write({
+            State,
+            Kernel.inspect(tick) <> Kernel.inspect(index),
+            tick,
+            index,
+            current_
+          })
+          :sys.replace_state(context[:pid], fn _s -> state end)
         end)
-        # :sys.replace_state(context[:pid], fn s -> %{s | state} end)
+        {result, states} = Mnesia.transaction(
+          fn ->
+            Mnesia.select(
+              State,
+              [{
+                {State, :"$1", :"$2", :"$3", :"$4"},
+                [{:==, :"$2", tick}],
+                [:"$4"]
+              }]
+            )
+          end
+        )
+        case result do
+          :atomic ->
+            :sys.replace_state(context[:pid], fn s -> {s | states} end)
+          _ ->
+            :nothing
+        end
+        # data = variables
+        # |> Enum.with_index
+        # |> Enum.map(fn({_var, index}) ->
+        #   Mnesia.transaction(fn -> Mnesia.match_object({State, tick, index, :_}) end)
+        # end)
     end)
   end
 end
