@@ -1,6 +1,12 @@
 # Cadex
 
-**TODO: Add description**
+An Elixir GenServer module based on the popular Python package [cadCAD](https://cadcad.org): "Design, test and validate complex systems through simulation in Python".
+
+This is an exercise in better understanding system modelling, simulation, complex systems, and the design of cadCAD. 
+
+It also serves as a learning exercise in the Erlang/Elixir OTP actor model and GenServer based programming constructs! In fact, it is the OTP actor model that originally made me think of the similarities to graph theory and the way state is managed in complex system modelling.
+
+Designing a differential games engine also uses all the best features of the Elixir language: it is functional, expressive, has great data constructs, pattern matching, scalability, it enables creating maintainable code, and has incredible tooling.
 
 ## Installation
 
