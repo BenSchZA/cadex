@@ -1,9 +1,0 @@
-{application,main,
-             [{applications,[kernel,stdlib,elixir,logger,stream_data,exprof,
-                             flow,graphvix]},
-              {description,"main"},
-              {modules,['Elixir.ExampleQueue','Elixir.Main.Application',
-                        'Elixir.Marbles','Elixir.State']},
-              {registered,[]},
-              {vsn,"0.1.0"},
-              {mod,{'Elixir.Main.Application',[]}}]}.
