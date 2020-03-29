@@ -47,25 +47,28 @@ defmodule MarblesTest do
   test "initial state" do
     assert Marbles.state == %State{
       previous: %{},
-      current: @initial_conditions
+      current: @initial_conditions,
+      delta: %{}
     }
   end
 
-  test "update A" do
-    Marbles.update(:box_A)
-    assert Marbles.state == %State{
-      previous: %{box_A: 11, box_B: 0},
-      current: %{box_A: 10, box_B: 0}
-    }
-  end
+  # test "update A" do
+  #   Marbles.update(:box_A)
+  #   assert Marbles.state = %State{
+  #     previous: %{box_A: 11, box_B: 0},
+  #     current: %{box_A: 10, box_B: 0},
+  #     delta: _
+  #   }
+  # end
 
-  test "update B" do
-    Marbles.update(:box_B)
-    assert Marbles.state == %State{
-      previous: %{box_A: 11, box_B: 0},
-      current: %{box_A: 11, box_B: 1}
-    }
-  end
+  # test "update B" do
+  #   Marbles.update(:box_B)
+  #   assert Marbles.state = %State{
+  #     previous: %{box_A: 11, box_B: 0},
+  #     current: %{box_A: 11, box_B: 1},
+  #     delta: _
+  #   }
+  # end
 
   test "ticks", context do
     [head | _tail] = @partial_state_update_blocks
@@ -78,38 +81,50 @@ defmodule MarblesTest do
         |> Enum.with_index
         |> Enum.each(fn({var, index}) ->
           IO.inspect var
-
-          state = %State{previous: _previous, current: _current} = Marbles.state
           Marbles.update(var)
-          _state_ = %State{previous: _previous_, current: current_} = Marbles.state
+          # state = %State{previous: _previous, current: _current} = Marbles.state
+          # Marbles.update(var)
+          # _state_ = %State{previous: _previous_, current: current_} = Marbles.state
 
-          Mnesia.dirty_write({
-            State,
-            Kernel.inspect(tick) <> Kernel.inspect(index),
-            tick,
-            index,
-            current_
-          })
-          :sys.replace_state(context[:pid], fn _s -> state end)
+          # Mnesia.dirty_write({
+          #   State,
+          #   Kernel.inspect(tick) <> Kernel.inspect(index),
+          #   tick,
+          #   index,
+          #   current_
+          # })
+          # :sys.replace_state(context[:pid], fn _s -> state end)
         end)
-        {result, states} = Mnesia.transaction(
-          fn ->
-            Mnesia.select(
-              State,
-              [{
-                {State, :"$1", :"$2", :"$3", :"$4"},
-                [{:==, :"$2", tick}],
-                [:"$4"]
-              }]
-            )
-          end
-        )
-        case result do
-          :atomic ->
-            :sys.replace_state(context[:pid], fn s -> {s | states} end)
-          _ ->
-            :nothing
-        end
+
+        variables
+        |> Enum.with_index
+        |> Enum.each(fn({var, index}) ->
+          state = %State{previous: _previous, current: current, delta: delta} = Marbles.state
+          IO.inspect delta
+          current_ = Map.update(current, var, nil, &(delta[var].(&1)))
+          :sys.replace_state(context[:pid], &(Map.put(&1, :current, current_)))
+        end)
+
+        :sys.replace_state(context[:pid], &(Map.put(&1, :delta, %{})))
+
+        # {result, states} = Mnesia.transaction(
+        #   fn ->
+        #     Mnesia.select(
+        #       State,
+        #       [{
+        #         {State, :"$1", :"$2", :"$3", :"$4"},
+        #         [{:==, :"$2", tick}],
+        #         [:"$4"]
+        #       }]
+        #     )
+        #   end
+        # )
+        # case result do
+        #   :atomic ->
+        #     :sys.replace_state(context[:pid], fn s -> {s | states} end)
+        #   _ ->
+        #     :nothing
+        # end
         # data = variables
         # |> Enum.with_index
         # |> Enum.map(fn({_var, index}) ->

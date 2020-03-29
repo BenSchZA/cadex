@@ -1,5 +1,5 @@
 defmodule State do
-  defstruct previous: %{}, current: %{}
+  defstruct previous: %{}, current: %{}, delta: %{}
 end
 
 defmodule Marbles do
@@ -38,39 +38,37 @@ defmodule Marbles do
   GenServer.handle_cast/2 callback
   """
 
-  def handle_cast({:update, var}, state = %State{previous: _previous, current: current}) when var == :box_A do
-    increment = cond do
-      current[var] > current[:box_B] -> -1
-      current[var] < current[:box_B] -> 1
-      true -> 0
-    end
+  def handle_cast({:update, var}, state = %State{previous: _previous, current: current, delta: delta}) when var == :box_A do
+    increment = &(&1 + cond do
+        current[var] > current[:box_B] -> -1
+        current[var] < current[:box_B] -> 1
+        true -> 0
+      end)
 
-    next = current
-    |> Map.put(var, current[var] + increment)
+    delta_ = %{var => increment}
 
     IO.inspect {
       :noreply,
       state
       |> Map.put(:previous, current)
-      |> Map.put(:current, next)
+      |> Map.put(:delta, Map.merge(delta, delta_))
     }
   end
 
-  def handle_cast({:update, var}, state = %State{previous: _previous, current: current}) when var == :box_B do
-    increment = cond do
-      current[var] > current[:box_A] -> -1
-      current[var] < current[:box_A] -> 1
-      true -> 0
-    end
+  def handle_cast({:update, var}, state = %State{previous: _previous, current: current, delta: delta}) when var == :box_B do
+    increment = &(&1 + cond do
+        current[var] > current[:box_A] -> - 1
+        current[var] < current[:box_A] -> 1
+        true -> 0
+      end)
 
-    next = current
-    |> Map.put(var, current[var] + increment)
+    delta_ = %{var => increment}
 
     IO.inspect {
       :noreply,
       state
       |> Map.put(:previous, current)
-      |> Map.put(:current, next)
+      |> Map.put(:delta, Map.merge(delta, delta_))
     }
   end
 
