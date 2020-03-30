@@ -1,36 +1,3 @@
-defmodule PartialStateUpdateBlock do
-  defstruct policies: [], variables: []
-end
-
-defmodule SimulationParameters do
-  defstruct T: 10, N: 1, M: %{}
-end
-
-defmodule State do
-  # @enforce_keys [:sim, :current]
-  defstruct sim: %{
-              simulation_parameters: %SimulationParameters{},
-              partial_state_update_blocks: [%PartialStateUpdateBlock{}]
-            },
-            previous: %{},
-            current: %{},
-            delta: %{}
-end
-
-defmodule StateUpdateParams do
-  defstruct params: %{}, substep: -1, sH: [%State{}], s: %State{}, input: %{}
-end
-
-defmodule PolicyParams do
-  defstruct params: %{}, substep: %{}, sH: [%State{}], s: %State{}
-end
-
-defmodule StructPipe do
-  defmacro left ~>> right do
-    {:%{}, [], [{:|, [], [left, right]}]}
-  end
-end
-
 defmodule Cadex do
   use GenServer
   import StructPipe
@@ -84,6 +51,17 @@ defmodule Cadex do
     {:reply, variables, state}
   end
 
+  def handle_call(:policies, _from, state) do
+    # TODO: handle case when more than one PSUB
+    %State{
+      sim: %{
+        partial_state_update_blocks: [%PartialStateUpdateBlock{policies: policies} | _tail]
+      }
+    } = state
+
+    {:reply, policies, state}
+  end
+
   def handle_call(
         :apply,
         _from,
@@ -108,8 +86,9 @@ defmodule Cadex do
   GenServer.handle_cast/2 callback
   """
 
-  def handle_cast(
+  def handle_call(
         {:update, var},
+        _from,
         state = %State{current: current, delta: delta}
       )
       when var == :box_A do
@@ -123,15 +102,20 @@ defmodule Cadex do
 
     delta_ = %{var => increment}
 
-    {
-      :noreply,
+    state_ =
       state
       |> Map.put(:delta, Map.merge(delta, delta_))
+
+    {
+      :reply,
+      state_,
+      state_
     }
   end
 
-  def handle_cast(
+  def handle_call(
         {:update, var},
+        _from,
         state = %State{current: current, delta: delta}
       )
       when var == :box_B do
@@ -145,10 +129,14 @@ defmodule Cadex do
 
     delta_ = %{var => increment}
 
-    {
-      :noreply,
+    state_ =
       state
       |> Map.put(:delta, Map.merge(delta, delta_))
+
+    {
+      :reply,
+      state_,
+      state_
     }
   end
 
@@ -160,10 +148,11 @@ defmodule Cadex do
 
   def state, do: GenServer.call(__MODULE__, :state)
   def variables, do: GenServer.call(__MODULE__, :variables)
+  def policies, do: GenServer.call(__MODULE__, :policies)
   def apply, do: GenServer.call(__MODULE__, :apply)
 
   def set_current(value), do: GenServer.call(__MODULE__, {:set_current, value})
   def reset_delta, do: GenServer.call(__MODULE__, :reset_delta)
 
-  def update(var), do: GenServer.cast(__MODULE__, {:update, var})
+  def update(var), do: GenServer.call(__MODULE__, {:update, var})
 end

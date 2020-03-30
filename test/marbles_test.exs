@@ -9,7 +9,10 @@ defmodule MarblesTest do
 
   @partial_state_update_blocks [
     %PartialStateUpdateBlock{
-      policies: [],
+      policies: [
+        :robot_1,
+        :robot_2
+      ],
       variables: [
         :box_A,
         :box_B
@@ -115,6 +118,30 @@ defmodule MarblesTest do
              current: %{box_A: 9, box_B: 2},
              delta: %{}
            } == Cadex.state()
+  end
+
+  test "call variables" do
+    assert [
+      :box_A,
+      :box_B
+    ] == Cadex.variables()
+  end
+
+  test "call policies" do
+    assert [
+      :robot_1,
+      :robot_2
+    ] == Cadex.policies()
+  end
+
+  test "reset delta" do
+    %State{delta: delta} = Cadex.state()
+    assert delta == %{}
+    Cadex.update(:box_A)
+    %State{delta: delta} =  Cadex.update(:box_B)
+    assert delta !== %{}
+    %State{delta: delta} = Cadex.reset_delta()
+    assert delta == %{}
   end
 
   test "ticks" do
