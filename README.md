@@ -21,6 +21,59 @@ The test `test/marbles_test.exs` provides a good example of a basic model, the c
 
 To run this test, enter the development environment, and run `mix test test/marbles_test.exs`.
 
+You should see output as follows:
+
+```
+[%PartialStateUpdateBlock{policies: [], variables: [:box_A, :box_B]}]
+.%State{
+  current: %{box_A: 11, box_B: 0},
+  delta: %{
+    box_A: #Function<2.72390911/1 in Cadex.handle_cast/2>,
+    box_B: #Function<1.72390911/1 in Cadex.handle_cast/2>
+  },
+  previous: %{},
+  sim: %{
+    partial_state_update_blocks: [
+      %PartialStateUpdateBlock{policies: [], variables: [:box_A, :box_B]}
+    ],
+    simulation_parameters: %SimulationParameters{M: %{}, N: 1, T: 10}
+  }
+}
+%State{
+  current: %{box_A: 10, box_B: 1},
+  delta: %{
+    box_A: #Function<2.72390911/1 in Cadex.handle_cast/2>,
+    box_B: #Function<1.72390911/1 in Cadex.handle_cast/2>
+  },
+  previous: %{box_A: 11, box_B: 0},
+  sim: %{
+    partial_state_update_blocks: [
+      %PartialStateUpdateBlock{policies: [], variables: [:box_A, :box_B]}
+    ],
+    simulation_parameters: %SimulationParameters{M: %{}, N: 1, T: 10}
+  }
+}
+%State{
+  current: %{box_A: 9, box_B: 2},
+  delta: %{
+    box_A: #Function<2.72390911/1 in Cadex.handle_cast/2>,
+    box_B: #Function<1.72390911/1 in Cadex.handle_cast/2>
+  },
+  previous: %{box_A: 10, box_B: 1},
+  sim: %{
+    partial_state_update_blocks: [
+      %PartialStateUpdateBlock{policies: [], variables: [:box_A, :box_B]}
+    ],
+    simulation_parameters: %SimulationParameters{M: %{}, N: 1, T: 10}
+  }
+}
+...
+Finished in 0.08 seconds
+5 tests, 0 failures
+
+Randomized with seed 249053
+```
+
 ## Installation
 
 **This package is not available on Hex yet.**
