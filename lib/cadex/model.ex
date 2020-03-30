@@ -1,12 +1,24 @@
-defmodule Cadex do
+defmodule Cadex.Model do
   defmacro __using__(opts) do
     actions = opts[:actions] || []
+
     init =
       quote do
         use GenServer
+        alias Cadex.Types
         import StructPipe
 
-        def start_link(state = %State{}), do: GenServer.start_link(__MODULE__, state, name: __MODULE__)
+        # defmodule State do
+        #   # @enforce_keys [:sim, :current]
+        #   defstruct sim: unquote(Macro.escape(Keyword.get(opts, :sim, %{}))),
+        #             current: unquote(Macro.escape(Keyword.get(opts, :initial_conditions, %{}))),
+        #             previous: %{},
+        #             delta: %{}
+        # end
+
+        def start_link(state \\ %Cadex.Types.State{}),
+          do: GenServer.start_link(__MODULE__, state, name: __MODULE__)
+
         def init(state), do: {:ok, state}
 
         @doc """
@@ -38,9 +50,11 @@ defmodule Cadex do
 
         def handle_call(:variables, _from, state) do
           # TODO: handle case when more than one PSUB
-          %State{
+          %Cadex.Types.State{
             sim: %{
-              partial_state_update_blocks: [%PartialStateUpdateBlock{variables: variables} | _tail]
+              partial_state_update_blocks: [
+                %Cadex.Types.PartialStateUpdateBlock{variables: variables} | _tail
+              ]
             }
           } = state
 
@@ -49,9 +63,9 @@ defmodule Cadex do
 
         def handle_call(:policies, _from, state) do
           # TODO: handle case when more than one PSUB
-          %State{
+          %Cadex.Types.State{
             sim: %{
-              partial_state_update_blocks: [%PartialStateUpdateBlock{policies: policies} | _tail]
+              partial_state_update_blocks: [%Cadex.Types.PartialStateUpdateBlock{policies: policies} | _tail]
             }
           } = state
 
@@ -61,11 +75,13 @@ defmodule Cadex do
         def handle_call(
               :apply,
               _from,
-              %State{current: current, delta: delta} = state
+              %Cadex.Types.State{current: current, delta: delta} = state
             ) do
-          %State{
+          %Cadex.Types.State{
             sim: %{
-              partial_state_update_blocks: [%PartialStateUpdateBlock{variables: variables} | _tail]
+              partial_state_update_blocks: [
+                %Cadex.Types.PartialStateUpdateBlock{variables: variables} | _tail
+              ]
             }
           } = state
 
@@ -75,7 +91,8 @@ defmodule Cadex do
               Map.update(acc, var, nil, &delta[var].(&1))
             end)
 
-          {:reply, state, %State{state | previous: current} ~>> [current: reduced] ~>> [delta: %{}]}
+          {:reply, state,
+           %Cadex.Types.State{state | previous: current} ~>> [current: reduced] ~>> [delta: %{}]}
         end
 
         ### Client API / Helper functions
@@ -93,16 +110,21 @@ defmodule Cadex do
     code =
       Enum.map(actions, fn action ->
         func_name = :"do_#{action}"
+
         quote do
-          def unquote(action)(entity), do: Dispatcher.dispatch(__MODULE__, {unquote(action), entity})
+          def unquote(action)(entity),
+            do: Dispatcher.dispatch(__MODULE__, {unquote(action), entity})
+
           def handle_call({unquote(action), _entity} = params, _from, state) do
             apply(__MODULE__, params)
             {:reply, :ok, state}
           end
+
           def handle_cast({unquote(action), _entity} = params, state) do
             apply(__MODULE__, params)
             {:noreply, state}
           end
+
           def unquote(func_name)(entity), do: entity
           defoverridable [{unquote(func_name), 1}]
         end

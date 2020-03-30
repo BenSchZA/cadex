@@ -1,6 +1,9 @@
 defmodule MarblesTest do
   use ExUnit.Case, async: true
   doctest Marbles
+  import Cadex.Types
+  alias Cadex.Types
+  alias Marbles
 
   @initial_conditions %{
     box_A: 11,
@@ -8,7 +11,7 @@ defmodule MarblesTest do
   }
 
   @partial_state_update_blocks [
-    %PartialStateUpdateBlock{
+    %Cadex.Types.PartialStateUpdateBlock{
       policies: [
         :robot_1,
         :robot_2
@@ -20,7 +23,7 @@ defmodule MarblesTest do
     }
   ]
 
-  @simulation_parameters %SimulationParameters{
+  @simulation_parameters %Cadex.Types.SimulationParameters{
     T: 10
   }
 
@@ -30,22 +33,14 @@ defmodule MarblesTest do
   end
 
   setup do
-    {:ok, pid} =
-      Marbles.start_link(%State{
-        sim: %{
-          simulation_parameters: @simulation_parameters,
-          partial_state_update_blocks: @partial_state_update_blocks
-        },
-        current: @initial_conditions
-      })
-
+    {:ok, pid} = Marbles.start()
     {:ok, %{pid: pid}}
   end
 
   test "initial state" do
     state = Marbles.state()
 
-    assert %State{
+    assert %Cadex.Types.State{
              sim: %{
                simulation_parameters: @simulation_parameters,
                partial_state_update_blocks: @partial_state_update_blocks
@@ -60,7 +55,7 @@ defmodule MarblesTest do
     Marbles.update(:box_A)
     state = Marbles.state()
 
-    assert %State{
+    assert %Cadex.Types.State{
              sim: %{
                simulation_parameters: @simulation_parameters,
                partial_state_update_blocks: @partial_state_update_blocks
@@ -77,7 +72,7 @@ defmodule MarblesTest do
     Marbles.update(:box_B)
     state = Marbles.state()
 
-    assert %State{
+    assert %Cadex.Types.State{
              sim: %{
                simulation_parameters: @simulation_parameters,
                partial_state_update_blocks: @partial_state_update_blocks
@@ -95,7 +90,7 @@ defmodule MarblesTest do
     Marbles.update(:box_B)
     Marbles.apply()
 
-    assert %State{
+    assert %Cadex.Types.State{
              sim: %{
                simulation_parameters: @simulation_parameters,
                partial_state_update_blocks: @partial_state_update_blocks
@@ -109,7 +104,7 @@ defmodule MarblesTest do
     Marbles.update(:box_B)
     Marbles.apply()
 
-    assert %State{
+    assert %Cadex.Types.State{
              sim: %{
                simulation_parameters: @simulation_parameters,
                partial_state_update_blocks: @partial_state_update_blocks
@@ -135,18 +130,18 @@ defmodule MarblesTest do
   end
 
   test "reset delta" do
-    %State{delta: delta} = Marbles.state()
+    %Cadex.Types.State{delta: delta} = Marbles.state()
     assert delta == %{}
     Marbles.update(:box_A)
-    %State{delta: delta} =  Marbles.update(:box_B)
+    %Cadex.Types.State{delta: delta} =  Marbles.update(:box_B)
     assert delta !== %{}
-    %State{delta: delta} = Marbles.reset_delta()
+    %Cadex.Types.State{delta: delta} = Marbles.reset_delta()
     assert delta == %{}
   end
 
   test "ticks" do
     variables = Marbles.variables()
-    %SimulationParameters{T: ticks} = @simulation_parameters
+    %Cadex.Types.SimulationParameters{T: ticks} = @simulation_parameters
 
     Enum.each(0..ticks, fn
       0 ->

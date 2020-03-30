@@ -8,7 +8,7 @@ defmodule Cadex.Application do
   def start(_type, _args) do
     children = [
       # Starts a worker by calling: App.Worker.start_link(arg)
-      {ExampleQueue, [1,2,3]}
+      # {ExampleQueue, [1,2,3]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
