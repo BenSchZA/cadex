@@ -23,7 +23,7 @@ To run this test, enter the development environment, and run `mix test test/marb
 
 You should see output as follows:
 
-```
+```elixir
 [%PartialStateUpdateBlock{policies: [], variables: [:box_A, :box_B]}]
 .%State{
   current: %{box_A: 11, box_B: 0},
@@ -92,6 +92,12 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/cadex](https://hexdocs.pm/cadex).
+
+## Roadmap
+
+1. Keep experimenting
+2. Introduce concurrency with `flow`
+3. Visualization with Phoenix LiveView and Scenic
 
 ## References
 
