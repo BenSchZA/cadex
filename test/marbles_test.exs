@@ -1,6 +1,6 @@
 defmodule MarblesTest do
   use ExUnit.Case, async: true
-  doctest Cadex
+  doctest Marbles
 
   @initial_conditions %{
     box_A: 11,
@@ -31,7 +31,7 @@ defmodule MarblesTest do
 
   setup do
     {:ok, pid} =
-      Cadex.start_link(%State{
+      Marbles.start_link(%State{
         sim: %{
           simulation_parameters: @simulation_parameters,
           partial_state_update_blocks: @partial_state_update_blocks
@@ -43,7 +43,7 @@ defmodule MarblesTest do
   end
 
   test "initial state" do
-    state = Cadex.state()
+    state = Marbles.state()
 
     assert %State{
              sim: %{
@@ -57,8 +57,8 @@ defmodule MarblesTest do
   end
 
   test "update A" do
-    Cadex.update(:box_A)
-    state = Cadex.state()
+    Marbles.update(:box_A)
+    state = Marbles.state()
 
     assert %State{
              sim: %{
@@ -74,8 +74,8 @@ defmodule MarblesTest do
   end
 
   test "update B" do
-    Cadex.update(:box_B)
-    state = Cadex.state()
+    Marbles.update(:box_B)
+    state = Marbles.state()
 
     assert %State{
              sim: %{
@@ -91,9 +91,9 @@ defmodule MarblesTest do
   end
 
   test "apply delta" do
-    Cadex.update(:box_A)
-    Cadex.update(:box_B)
-    Cadex.apply()
+    Marbles.update(:box_A)
+    Marbles.update(:box_B)
+    Marbles.apply()
 
     assert %State{
              sim: %{
@@ -103,11 +103,11 @@ defmodule MarblesTest do
              previous: %{box_A: 11, box_B: 0},
              current: %{box_A: 10, box_B: 1},
              delta: %{}
-           } == Cadex.state()
+           } == Marbles.state()
 
-    Cadex.update(:box_A)
-    Cadex.update(:box_B)
-    Cadex.apply()
+    Marbles.update(:box_A)
+    Marbles.update(:box_B)
+    Marbles.apply()
 
     assert %State{
              sim: %{
@@ -117,35 +117,35 @@ defmodule MarblesTest do
              previous: %{box_A: 10, box_B: 1},
              current: %{box_A: 9, box_B: 2},
              delta: %{}
-           } == Cadex.state()
+           } == Marbles.state()
   end
 
   test "call variables" do
     assert [
       :box_A,
       :box_B
-    ] == Cadex.variables()
+    ] == Marbles.variables()
   end
 
   test "call policies" do
     assert [
       :robot_1,
       :robot_2
-    ] == Cadex.policies()
+    ] == Marbles.policies()
   end
 
   test "reset delta" do
-    %State{delta: delta} = Cadex.state()
+    %State{delta: delta} = Marbles.state()
     assert delta == %{}
-    Cadex.update(:box_A)
-    %State{delta: delta} =  Cadex.update(:box_B)
+    Marbles.update(:box_A)
+    %State{delta: delta} =  Marbles.update(:box_B)
     assert delta !== %{}
-    %State{delta: delta} = Cadex.reset_delta()
+    %State{delta: delta} = Marbles.reset_delta()
     assert delta == %{}
   end
 
   test "ticks" do
-    variables = Cadex.variables()
+    variables = Marbles.variables()
     %SimulationParameters{T: ticks} = @simulation_parameters
 
     Enum.each(0..ticks, fn
@@ -154,10 +154,10 @@ defmodule MarblesTest do
 
       _ = _tick ->
         variables
-        |> Enum.each(&Cadex.update(&1))
+        |> Enum.each(&Marbles.update(&1))
 
-        IO.inspect(Cadex.state())
-        Cadex.apply()
+        IO.inspect(Marbles.state())
+        Marbles.apply()
     end)
   end
 end
