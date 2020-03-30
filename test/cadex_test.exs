@@ -8,8 +8,8 @@ defmodule CadexTest do
   }
 
   @partial_state_update_blocks [
-    %{
-      policies: %{},
+    %PartialStateUpdateBlock{
+      policies: [],
       variables: [
         :box_A,
         :box_B
@@ -17,10 +17,8 @@ defmodule CadexTest do
     }
   ]
 
-  @simulation_parameters %{
-    T: 10,
-    N: 1,
-    M: %{}
+  @simulation_parameters %SimulationParameters{
+    T: 10
   }
 
   setup_all do
@@ -31,6 +29,10 @@ defmodule CadexTest do
   setup do
     {:ok, pid} =
       Cadex.start_link(%State{
+        sim: %{
+          simulation_parameters: @simulation_parameters,
+          partial_state_update_blocks: @partial_state_update_blocks
+        },
         current: @initial_conditions
       })
 
@@ -41,6 +43,10 @@ defmodule CadexTest do
     state = Cadex.state()
 
     assert %State{
+             sim: %{
+               simulation_parameters: @simulation_parameters,
+               partial_state_update_blocks: @partial_state_update_blocks
+             },
              previous: %{},
              current: @initial_conditions,
              delta: %{}
@@ -52,6 +58,10 @@ defmodule CadexTest do
     state = Cadex.state()
 
     assert %State{
+             sim: %{
+               simulation_parameters: @simulation_parameters,
+               partial_state_update_blocks: @partial_state_update_blocks
+             },
              previous: %{},
              current: %{box_A: 11, box_B: 0},
              delta: %{box_A: func}
@@ -65,6 +75,10 @@ defmodule CadexTest do
     state = Cadex.state()
 
     assert %State{
+             sim: %{
+               simulation_parameters: @simulation_parameters,
+               partial_state_update_blocks: @partial_state_update_blocks
+             },
              previous: %{},
              current: %{box_A: 11, box_B: 0},
              delta: %{box_B: func}
@@ -73,12 +87,16 @@ defmodule CadexTest do
     assert Kernel.is_function(func)
   end
 
-  test "apply delta", context do
+  test "apply delta" do
     Cadex.update(:box_A)
     Cadex.update(:box_B)
-    apply_delta(context[:pid], get_variables())
+    Cadex.apply()
 
     assert %State{
+             sim: %{
+               simulation_parameters: @simulation_parameters,
+               partial_state_update_blocks: @partial_state_update_blocks
+             },
              previous: %{box_A: 11, box_B: 0},
              current: %{box_A: 10, box_B: 1},
              delta: %{}
@@ -86,39 +104,24 @@ defmodule CadexTest do
 
     Cadex.update(:box_A)
     Cadex.update(:box_B)
-    apply_delta(context[:pid], get_variables())
+    Cadex.apply()
 
     assert %State{
+             sim: %{
+               simulation_parameters: @simulation_parameters,
+               partial_state_update_blocks: @partial_state_update_blocks
+             },
              previous: %{box_A: 10, box_B: 1},
              current: %{box_A: 9, box_B: 2},
              delta: %{}
            } == Cadex.state()
   end
 
-  def get_variables do
-    [head | _tail] = @partial_state_update_blocks
-    head[:variables]
-  end
+  test "ticks" do
+    variables = Cadex.variables()
+    %SimulationParameters{T: ticks} = @simulation_parameters
 
-  def apply_delta(pid, variables) do
-    %State{previous: _, current: current, delta: _} = Cadex.state()
-    :sys.replace_state(pid, &Map.put(&1, :previous, current))
-
-    variables
-    |> Enum.each(fn var ->
-      %State{previous: _, current: current, delta: delta} = Cadex.state()
-
-      current_ = Map.update(current, var, nil, &delta[var].(&1))
-      :sys.replace_state(pid, &Map.put(&1, :current, current_))
-    end)
-
-    :sys.replace_state(pid, &Map.put(&1, :delta, %{}))
-  end
-
-  test "ticks", context do
-    variables = get_variables()
-
-    Enum.each(0..@simulation_parameters[:T], fn
+    Enum.each(0..ticks, fn
       0 ->
         :nothing
 
@@ -126,9 +129,8 @@ defmodule CadexTest do
         variables
         |> Enum.each(&Cadex.update(&1))
 
-        IO.inspect Cadex.state()
-
-        apply_delta(context[:pid], variables)
+        IO.inspect(Cadex.state())
+        Cadex.apply()
     end)
   end
 end

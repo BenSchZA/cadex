@@ -1,5 +1,20 @@
+defmodule PartialStateUpdateBlock do
+  defstruct policies: [], variables: []
+end
+
+defmodule SimulationParameters do
+  defstruct T: 10, N: 1, M: %{}
+end
+
 defmodule State do
-  defstruct previous: %{}, current: %{}, delta: %{}
+  # @enforce_keys [:sim, :current]
+  defstruct sim: %{
+              simulation_parameters: %SimulationParameters{},
+              partial_state_update_blocks: [%PartialStateUpdateBlock{}]
+            },
+            previous: %{},
+            current: %{},
+            delta: %{}
 end
 
 defmodule StateUpdateParams do
@@ -10,8 +25,15 @@ defmodule PolicyParams do
   defstruct params: %{}, substep: %{}, sH: [%State{}], s: %State{}
 end
 
+defmodule StructPipe do
+  defmacro left ~>> right do
+    {:%{}, [], [{:|, [], [left, right]}]}
+  end
+end
+
 defmodule Cadex do
   use GenServer
+  import StructPipe
 
   @moduledoc """
   Documentation for Cadex.
@@ -43,13 +65,52 @@ defmodule Cadex do
 
   def handle_call(:state, _from, state), do: {:reply, state, state}
 
+  def handle_call({:set_current, value}, _from, state) do
+    {:reply, Map.put(state, :current, value), state}
+  end
+
+  def handle_call(:reset_delta, _from, state) do
+    {:reply, Map.put(state, :delta, %{}), state}
+  end
+
+  def handle_call(:variables, _from, state) do
+    # TODO: handle case when more than one PSUB
+    %State{
+      sim: %{
+        partial_state_update_blocks: [%PartialStateUpdateBlock{variables: variables} | _tail]
+      }
+    } = state
+
+    {:reply, variables, state}
+  end
+
+  def handle_call(
+        :apply,
+        _from,
+        %State{current: current, delta: delta} = state
+      ) do
+    %State{
+      sim: %{
+        partial_state_update_blocks: [%PartialStateUpdateBlock{variables: variables} | _tail]
+      }
+    } = state
+
+    reduced =
+      variables
+      |> Enum.reduce(current, fn var, acc ->
+        Map.update(acc, var, nil, &delta[var].(&1))
+      end)
+
+    {:reply, state, %State{state | previous: current} ~>> [current: reduced] ~>> [delta: %{}]}
+  end
+
   @doc """
   GenServer.handle_cast/2 callback
   """
 
   def handle_cast(
         {:update, var},
-        state = %State{previous: _, current: current, delta: delta}
+        state = %State{current: current, delta: delta}
       )
       when var == :box_A do
     increment =
@@ -71,7 +132,7 @@ defmodule Cadex do
 
   def handle_cast(
         {:update, var},
-        state = %State{previous: _, current: current, delta: delta}
+        state = %State{current: current, delta: delta}
       )
       when var == :box_B do
     increment =
@@ -98,5 +159,11 @@ defmodule Cadex do
   end
 
   def state, do: GenServer.call(__MODULE__, :state)
+  def variables, do: GenServer.call(__MODULE__, :variables)
+  def apply, do: GenServer.call(__MODULE__, :apply)
+
+  def set_current(value), do: GenServer.call(__MODULE__, {:set_current, value})
+  def reset_delta, do: GenServer.call(__MODULE__, :reset_delta)
+
   def update(var), do: GenServer.cast(__MODULE__, {:update, var})
 end
