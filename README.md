@@ -105,4 +105,5 @@ be found at [https://hexdocs.pm/cadex](https://hexdocs.pm/cadex).
 
 ## References
 
-1. https://github.com/jgke/epidemic
+1. https://github.com/BlockScience/cadCAD
+2. https://github.com/jgke/epidemic
