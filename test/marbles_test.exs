@@ -1,4 +1,4 @@
-defmodule CadexTest do
+defmodule MarblesTest do
   use ExUnit.Case, async: true
   doctest Cadex
 
