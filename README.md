@@ -8,6 +8,10 @@ It also serves as a learning exercise in the Erlang/Elixir OTP actor model and G
 
 Designing a differential games engine also uses all the best features of the Elixir language: it is functional, expressive, has great data constructs, pattern matching, scalability, it enables creating maintainable code, and has incredible tooling.
 
+## Basic Usage
+
+**TODO**
+
 ## Development
 
 I've created a [Nix](https://nixos.org/nix/) shell for development, `shell.nix`. This includes all the dependencies you should need, and should work on both Linux and Mac - I've only tested it on Linux.
