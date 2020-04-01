@@ -1,4 +1,13 @@
 defmodule Cadex.Model do
+  # defmacro __before_compile__(_) do
+  #   quote do
+  #     def handle_call(msg, from, state) do
+  #       IO.inspect {:unknown_message, msg}
+  #       {:reply, state, state}
+  #     end
+  #  end
+  # end
+
   defmacro __using__(opts) do
     actions = opts[:actions] || []
 
@@ -113,7 +122,7 @@ defmodule Cadex.Model do
 
         quote do
           def unquote(action)(entity),
-            do: Dispatcher.dispatch(__MODULE__, {unquote(action), entity})
+            do: GenServer.call(__MODULE__, {unquote(action), entity})
 
           def handle_call({unquote(action), _entity} = params, _from, state) do
             apply(__MODULE__, params)

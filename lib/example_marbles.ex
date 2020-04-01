@@ -1,6 +1,8 @@
 defmodule Marbles do
   alias Cadex.Types
   use Cadex.Model
+  use Cadex.Decorators
+  import Cadex.Model
 
   @initial_conditions %{
     box_A: 11,
@@ -45,11 +47,17 @@ defmodule Marbles do
   GenServer.handle_call/3 callback
   """
 
+  def do_boxA do
+    IO.puts "Hello world"
+  end
+
+  # @state_update(:box_A)
+  @decorate state_update(:box_A)
   def handle_call(
         {:update, var},
         _from,
         state = %Cadex.Types.State{current: current, delta: delta}
-      )
+      ) do
       when var == :box_A do
     increment =
       &(&1 +
@@ -72,6 +80,7 @@ defmodule Marbles do
     }
   end
 
+  # @state_update(:box_b)
   def handle_call(
         {:update, var},
         _from,

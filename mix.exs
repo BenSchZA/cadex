@@ -28,6 +28,7 @@ defmodule Cadex.MixProject do
       {:graphvix, "~> 1.0.0"},
       {:exprof, "~> 0.2.0"},
       {:stream_data, "~> 0.1", only: [:dev, :test, :prod]},
+      {:decorator, "~> 1.3.2"},
       # {:expyplot, "~> 1.1.2"}
     ]
   end

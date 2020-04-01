@@ -1,5 +1,6 @@
 defmodule MarblesTest do
   use ExUnit.Case, async: true
+  import ExProf.Macro
   doctest Marbles
   import Cadex.Types
   alias Cadex.Types
@@ -143,16 +144,18 @@ defmodule MarblesTest do
     variables = Marbles.variables()
     %Cadex.Types.SimulationParameters{T: ticks} = @simulation_parameters
 
-    Enum.each(0..ticks, fn
-      0 ->
-        :nothing
+    profile do
+      Enum.each(0..ticks, fn
+        0 ->
+          :nothing
 
-      _ = _tick ->
-        variables
-        |> Enum.each(&Marbles.update(&1))
+        _ = _tick ->
+          variables
+          |> Enum.each(&Marbles.update(&1))
 
-        IO.inspect(Marbles.state())
-        Marbles.apply()
-    end)
+          IO.inspect(Marbles.state())
+          Marbles.apply()
+      end)
+    end
   end
 end
