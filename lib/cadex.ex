@@ -3,6 +3,7 @@ defmodule Cadex do
   alias Cadex.Types
   import StructPipe
   require Logger
+  import ExProf.Macro
 
   @spec start(any, nil | %Cadex.Types.State{}) :: {:ok, any}
   def start(impl, override \\ nil) do
@@ -14,6 +15,29 @@ defmodule Cadex do
 
     {:ok, pid} = start_link(%{model_state: initial_state, impl: impl})
     {:ok, pid}
+  end
+
+  def run do
+    variables = variables()
+
+    %Cadex.Types.State{sim: %{simulation_parameters: %Cadex.Types.SimulationParameters{T: ticks}}} =
+      state()
+
+    profile do
+      Enum.each(0..ticks, fn
+        0 ->
+          :nothing
+
+        _ = _tick ->
+          variables
+          |> Enum.each(&update(&1))
+
+          IO.inspect(state())
+          apply()
+      end)
+    end
+
+    {:ok, state()}
   end
 
   def start_link(state), do: GenServer.start_link(__MODULE__, state, name: __MODULE__)
@@ -56,7 +80,12 @@ defmodule Cadex do
         _from,
         state =
           %{
-            model_state: %Cadex.Types.State{previous_states: previous_states, current_state: current_state, delta: delta} = model_state,
+            model_state:
+              %Cadex.Types.State{
+                previous_states: previous_states,
+                current_state: current_state,
+                delta: delta
+              } = model_state,
             impl: impl
           } = state
       ) do
@@ -97,11 +126,17 @@ defmodule Cadex do
         :apply,
         _from,
         %{
-          model_state: %Cadex.Types.State{previous_states: previous_states, current_state: current_state, delta: delta} = model_state,
+          model_state:
+            %Cadex.Types.State{
+              previous_states: previous_states,
+              current_state: current_state,
+              delta: delta
+            } = model_state,
           impl: impl
         }
       ) do
     Logger.info("Applying state updates")
+
     %Cadex.Types.State{
       sim: %{
         partial_state_update_blocks: [
@@ -118,7 +153,7 @@ defmodule Cadex do
 
     {:reply, model_state,
      %{
-      model_state:
+       model_state:
          %Cadex.Types.State{model_state | previous_states: previous_states ++ [current_state]}
          ~>> [current_state: reduced]
          ~>> [delta: %{}],
