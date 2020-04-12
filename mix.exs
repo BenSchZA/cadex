@@ -17,7 +17,7 @@ defmodule Cadex.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger, :export],
       mod: {Cadex.Application, []}
     ]
   end
@@ -32,8 +32,9 @@ defmodule Cadex.MixProject do
       {:exprof, "~> 0.2.0"},
       {:stream_data, "~> 0.1", only: [:dev, :test, :prod]},
       {:decorator, "~> 1.3.2"},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
-      # {:expyplot, "~> 1.1.2"}
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      # {:expyplot, "~> 1.1.2", only: [:dev, :test]},
+      {:export, "~> 0.1.0"}
     ]
   end
 end

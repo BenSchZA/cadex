@@ -4,6 +4,7 @@ defmodule MarblesTest do
   import Cadex.Types
   alias Cadex.Types
   alias Marbles
+  alias Expyplot.Plot
 
   @initial_conditions %{
     box_A: 11,
@@ -24,7 +25,7 @@ defmodule MarblesTest do
   ]
 
   @simulation_parameters %Cadex.Types.SimulationParameters{
-    T: 10
+    T: 0..10
   }
 
   setup_all do
@@ -141,7 +142,25 @@ defmodule MarblesTest do
   end
 
   test "cadex run" do
-    assert {:ok, %Cadex.Types.State{} = state} = Cadex.run()
-    IO.inspect state
+    assert {:ok, results} = Cadex.run()
+    IO.inspect results |> List.last
+  end
+
+  test "pyplot" do
+    {:ok, results} = Cadex.run(debug=false)
+    %{run: run, result: run_results} = results |> List.first
+    box_A_plot = run_results |> Enum.map(fn result ->
+      %{timestep: timestep, state: state} = result |> List.last
+      %{box_A: box_A, box_B: box_B} = state |> List.last
+      box_A
+    end)
+
+    box_B_plot = run_results |> Enum.map(fn result ->
+      %{timestep: timestep, state: state} = result |> List.last
+      %{box_A: box_A, box_B: box_B} = state |> List.last
+      box_B
+    end)
+
+    PythonInterface.plot(box_A_plot, box_B_plot)
   end
 end

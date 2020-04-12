@@ -3,7 +3,6 @@ defmodule Cadex do
   alias Cadex.Types
   import StructPipe
   require Logger
-  import ExProf.Macro
 
   @spec start(any, nil | %Cadex.Types.State{}) :: {:ok, any}
   def start(impl, override \\ nil) do
@@ -17,34 +16,44 @@ defmodule Cadex do
     {:ok, pid}
   end
 
-  def run do
+  def run(debug \\ false) do
     %Cadex.Types.State{
       sim: %{
-        simulation_parameters: %Cadex.Types.SimulationParameters{T: ticks},
+        simulation_parameters: %Cadex.Types.SimulationParameters{N: runs, T: range},
         partial_state_update_blocks: partial_state_update_blocks
       }
     } = state()
 
-    profile do
-      Enum.each(0..ticks, fn
-        0 ->
-          :nothing
-
-        _ = _tick ->
-          partial_state_update_blocks
-          |> Enum.with_index()
-          |> Enum.each(fn {%Cadex.Types.PartialStateUpdateBlock{
-                             policies: policies,
-                             variables: variables
-                           }, index} ->
-            policies |> Enum.each(&policy(&1, index))
-            variables |> Enum.each(&update(&1, index))
-            apply()
-          end)
-      end)
+    case debug do
+      true -> Logger.configure(level: :debug)
+      false -> Logger.configure(level: :info)
     end
 
-    {:ok, state()}
+    results =
+      Enum.map(1..runs, fn run ->
+        result =
+          Enum.map(range, fn
+            0 ->
+              nil
+
+            _ = timestep ->
+              partial_state_update_blocks
+              |> Enum.with_index()
+              |> Enum.map(fn {%Cadex.Types.PartialStateUpdateBlock{
+                                policies: policies,
+                                variables: variables
+                              }, substep} ->
+                policies |> Enum.each(&policy(&1, substep))
+                variables |> Enum.each(&update(&1, substep))
+                %Cadex.Types.State{previous_states: previous_states} = apply()
+                %{timestep: timestep, substep: substep, state: previous_states}
+              end)
+          end)
+
+        %{run: run, result: result |> Enum.filter(fn x -> !is_nil(x) end)}
+      end)
+
+    {:ok, results}
   end
 
   def start_link(state), do: GenServer.start_link(__MODULE__, state, name: __MODULE__)
@@ -96,7 +105,7 @@ defmodule Cadex do
           impl: impl
         }
       ) do
-    Logger.info("Applying policy #{type}")
+    Logger.debug("Applying policy #{type}")
     {:ok, signals_} = impl.policy(type, %{}, substep, previous_states, current_state)
     model_state_ = model_state |> Map.put(:signals, Map.merge(signals, signals_))
     {:reply, model_state_, %{state | model_state: model_state_}}
@@ -116,7 +125,7 @@ defmodule Cadex do
           impl: impl
         }
       ) do
-    Logger.info("Calculating state variable update for #{var}")
+    Logger.debug("Calculating state variable update for #{var}")
     {:ok, function} = impl.update(var, %{}, substep, previous_states, current_state, signals)
     delta_ = %{var => function}
     model_state_ = model_state |> Map.put(:delta, Map.merge(delta, delta_))
@@ -162,7 +171,7 @@ defmodule Cadex do
           impl: impl
         }
       ) do
-    Logger.info("Applying state updates")
+    Logger.debug("Applying state updates")
 
     %Cadex.Types.State{
       sim: %{
@@ -178,13 +187,15 @@ defmodule Cadex do
         Map.update(acc, var, nil, &delta[var].(&1))
       end)
 
-    {:reply, model_state,
+    model_state_ =
+      %Cadex.Types.State{model_state | previous_states: previous_states ++ [current_state]}
+      ~>> [current_state: reduced]
+      ~>> [delta: %{}]
+      ~>> [signals: %{}]
+
+    {:reply, model_state_,
      %{
-       model_state:
-         %Cadex.Types.State{model_state | previous_states: previous_states ++ [current_state]}
-         ~>> [current_state: reduced]
-         ~>> [delta: %{}]
-         ~>> [signals: %{}],
+       model_state: model_state_,
        impl: impl
      }}
   end

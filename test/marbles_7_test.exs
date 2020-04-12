@@ -4,33 +4,7 @@ defmodule Marbles7Test do
   import Cadex.Types
   alias Cadex.Types
   alias Marbles7
-
-  @initial_conditions %{
-    box_A: 10,
-    box_B: 0
-  }
-
-  @partial_state_update_blocks [
-    %Cadex.Types.PartialStateUpdateBlock{
-      policies: [
-        :robot_1,
-        :robot_2
-      ],
-      variables: [
-        :box_A,
-        :box_B
-      ]
-    }
-  ]
-
-  @simulation_parameters %Cadex.Types.SimulationParameters{
-    T: 50
-  }
-
-  setup_all do
-    IO.inspect(@partial_state_update_blocks)
-    :ok
-  end
+  import ExProf.Macro
 
   setup do
     {:ok, pid} = Cadex.start(Marbles7)
@@ -38,7 +12,24 @@ defmodule Marbles7Test do
   end
 
   test "cadex run" do
-    assert {:ok, %Cadex.Types.State{} = state} = Cadex.run()
-    IO.inspect state
+    # %Cadex.Types.State{} = state
+    profile do
+      assert {:ok, results} = Cadex.run(debug=false)
+
+      %{run: run, result: run_results} = results |> List.first
+      box_A_plot = run_results |> Enum.map(fn result ->
+        %{timestep: timestep, state: state} = result |> List.last
+        %{box_A: box_A, box_B: box_B} = state |> List.last
+        box_A
+      end)
+
+      box_B_plot = run_results |> Enum.map(fn result ->
+        %{timestep: timestep, state: state} = result |> List.last
+        %{box_A: box_A, box_B: box_B} = state |> List.last
+        box_B
+      end)
+
+      PythonInterface.plot(box_A_plot, box_B_plot)
+    end
   end
 end

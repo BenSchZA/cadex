@@ -19,7 +19,7 @@ let
 in
 
 mkShell {
-  buildInputs = [ erlang_wx elixir ]
+  buildInputs = [ erlang_wx elixir python37Packages.setuptools qt5.full python37 python37Packages.pyqt5 python37Packages.numpy python37Packages.matplotlib]
     ++ optionals stdenv.isLinux [ inotify-tools wxGTK ] # For file_system on Linux.
     ++ optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
       # For file_system on macOS.
