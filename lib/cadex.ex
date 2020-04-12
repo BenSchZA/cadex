@@ -32,7 +32,6 @@ defmodule Cadex do
           variables
           |> Enum.each(&update(&1))
 
-          IO.inspect(state())
           apply()
       end)
     end
