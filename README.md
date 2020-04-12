@@ -129,7 +129,7 @@ end)
 PythonInterface.plot_marble_runs(box_A_plots, box_B_plots)
 ```
 
-![Robots and marbles plot][https://github.com/BenSchZA/cadex/raw/master/media/robots_and_marbles_plot.png]
+![Robots and marbles plot](https://github.com/BenSchZA/cadex/raw/master/media/robots_and_marbles_plot.png)
 
 ## Development
 
