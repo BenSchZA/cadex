@@ -1,8 +1,6 @@
 defmodule Marbles7Test do
   use ExUnit.Case, async: false
   doctest Marbles7
-  import Cadex.Types
-  alias Cadex.Types
   alias Marbles7
   import ExProf.Macro
 
@@ -14,7 +12,7 @@ defmodule Marbles7Test do
   test "cadex run" do
     # %Cadex.Types.State{} = state
     profile do
-      assert {:ok, runs} = Cadex.run(debug=false)
+      assert {:ok, runs} = Cadex.run()
 
       box_A_plots = runs |> Enum.map(fn %{run: _run, result: result} ->
         result |> Enum.map(fn timestep ->
