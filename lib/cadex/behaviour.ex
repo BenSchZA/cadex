@@ -1,6 +1,7 @@
 defmodule Cadex.Behaviour do
   @callback config :: %Cadex.Types.State{}
   @callback policy(
+              type :: atom(),
               params :: %{optional(atom()) => any()},
               substep :: integer,
               previous_states :: %{optional(atom()) => any()},

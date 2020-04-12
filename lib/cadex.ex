@@ -18,8 +18,12 @@ defmodule Cadex do
   end
 
   def run do
-    %Cadex.Types.State{sim: %{simulation_parameters: %Cadex.Types.SimulationParameters{T: ticks}, partial_state_update_blocks: partial_state_update_blocks}} =
-      state()
+    %Cadex.Types.State{
+      sim: %{
+        simulation_parameters: %Cadex.Types.SimulationParameters{T: ticks},
+        partial_state_update_blocks: partial_state_update_blocks
+      }
+    } = state()
 
     profile do
       Enum.each(0..ticks, fn
@@ -28,8 +32,12 @@ defmodule Cadex do
 
         _ = _tick ->
           partial_state_update_blocks
-          |> Enum.with_index
-          |> Enum.each(fn {%Cadex.Types.PartialStateUpdateBlock{policies: _policies, variables: variables}, index} ->
+          |> Enum.with_index()
+          |> Enum.each(fn {%Cadex.Types.PartialStateUpdateBlock{
+                             policies: policies,
+                             variables: variables
+                           }, index} ->
+            policies |> Enum.each(&policy(&1, index))
             variables |> Enum.each(&update(&1, index))
             apply()
           end)
@@ -75,21 +83,41 @@ defmodule Cadex do
   end
 
   def handle_call(
+        {:policy, type, substep},
+        _from,
+        state = %{
+          model_state:
+            %Cadex.Types.State{
+              previous_states: previous_states,
+              current_state: current_state,
+              delta: _delta,
+              signals: signals
+            } = model_state,
+          impl: impl
+        }
+      ) do
+    Logger.info("Applying policy #{type}")
+    {:ok, signals_} = impl.policy(type, %{}, substep, previous_states, current_state)
+    model_state_ = model_state |> Map.put(:signals, Map.merge(signals, signals_))
+    {:reply, model_state_, %{state | model_state: model_state_}}
+  end
+
+  def handle_call(
         {:update, var, substep},
         _from,
-        state =
-          %{
-            model_state:
-              %Cadex.Types.State{
-                previous_states: previous_states,
-                current_state: current_state,
-                delta: delta
-              } = model_state,
-            impl: impl
-          } = state
+        state = %{
+          model_state:
+            %Cadex.Types.State{
+              previous_states: previous_states,
+              current_state: current_state,
+              delta: delta,
+              signals: signals
+            } = model_state,
+          impl: impl
+        }
       ) do
     Logger.info("Calculating state variable update for #{var}")
-    {:ok, function} = impl.update(var, %{}, substep, previous_states, current_state, %{})
+    {:ok, function} = impl.update(var, %{}, substep, previous_states, current_state, signals)
     delta_ = %{var => function}
     model_state_ = model_state |> Map.put(:delta, Map.merge(delta, delta_))
     {:reply, model_state_, %{state | model_state: model_state_}}
@@ -155,13 +183,16 @@ defmodule Cadex do
        model_state:
          %Cadex.Types.State{model_state | previous_states: previous_states ++ [current_state]}
          ~>> [current_state: reduced]
-         ~>> [delta: %{}],
+         ~>> [delta: %{}]
+         ~>> [signals: %{}],
        impl: impl
      }}
   end
 
   @spec state :: any
   def state, do: GenServer.call(__MODULE__, :state)
+  @spec policy(any, any) :: any
+  def policy(type, substep \\ 0), do: GenServer.call(__MODULE__, {:policy, type, substep})
   @spec update(any, any) :: any
   def update(var, substep \\ 0), do: GenServer.call(__MODULE__, {:update, var, substep})
   @spec variables :: any

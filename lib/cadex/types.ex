@@ -15,14 +15,15 @@ defmodule Cadex.Types do
               },
               previous_states: [],
               current_state: %{},
-              delta: %{}
+              delta: %{},
+              signals: %{}
   end
 
-  defmodule StateUpdateParams do
-    defstruct params: %{}, substep: -1, sH: [%State{}], s: %State{}, input: %{}
-  end
+  # defmodule StateUpdateParams do
+  #   defstruct params: %{}, substep: -1, sH: [%State{}], s: %State{}, input: %{}
+  # end
 
-  defmodule PolicyParams do
-    defstruct params: %{}, substep: %{}, sH: [%State{}], s: %State{}
-  end
+  # defmodule PolicyParams do
+  #   defstruct params: %{}, substep: %{}, sH: [%State{}], s: %State{}
+  # end
 end

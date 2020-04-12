@@ -1,5 +1,5 @@
 defmodule MarblesTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   doctest Marbles
   import Cadex.Types
   alias Cadex.Types
@@ -47,7 +47,8 @@ defmodule MarblesTest do
              },
              previous_states: [],
              current_state: @initial_conditions,
-             delta: %{}
+             delta: %{},
+             signals: %{}
            } = state
   end
 

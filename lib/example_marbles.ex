@@ -35,7 +35,7 @@ defmodule Marbles do
   end
 
   @impl true
-  def policy(_params, _substep, _previous_states, _current_state) do
+  def policy(_type, _params, _substep, _previous_states, _current_state) do
     {:ok, %{}}
   end
 
