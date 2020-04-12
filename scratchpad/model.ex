@@ -38,8 +38,8 @@ defmodule Cadex.Model do
           {:reply, Map.put(current_state, :delta, %{}), state}
         end
 
-        def handle_call({:update, var}, _from, state = %{current_state: %Cadex.Types.State{current: current, delta: delta} = current_state, impl: impl}) do
-          {:ok, function} = impl.update(var, current_state)
+        def handle_call({:update, var}, _from, state = %{current_state: %Cadex.Types.State{previous: previous, current: current, delta: delta} = current_state, impl: impl}) do
+          {:ok, function} = impl.update(var, previous, current)
           delta_ = %{var => function}
           current_state_ = current_state |> Map.put(:delta, Map.merge(delta, delta_))
           {:reply, current_state_, state}

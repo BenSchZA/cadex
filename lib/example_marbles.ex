@@ -30,17 +30,17 @@ defmodule Marbles do
         simulation_parameters: @simulation_parameters,
         partial_state_update_blocks: @partial_state_update_blocks
       },
-      current: @initial_conditions
+      current_state: @initial_conditions
     }
   end
 
   @impl true
-  def update(var = :box_A, _state = %Cadex.Types.State{current: current}) do
+  def update(var = :box_A, _params, _substep, _previous_states, current_state, _input) do
     increment =
       &(&1 +
           cond do
-            current[var] > current[:box_B] -> -1
-            current[var] < current[:box_B] -> 1
+            current_state[var] > current_state[:box_B] -> -1
+            current_state[var] < current_state[:box_B] -> 1
             true -> 0
           end)
 
@@ -48,12 +48,12 @@ defmodule Marbles do
   end
 
   @impl true
-  def update(var = :box_B, _state = %Cadex.Types.State{current: current}) do
+  def update(var = :box_B, _params, _substep, _previous_states, current_state, _input) do
     increment =
       &(&1 +
           cond do
-            current[var] > current[:box_A] -> -1
-            current[var] < current[:box_A] -> 1
+            current_state[var] > current_state[:box_A] -> -1
+            current_state[var] < current_state[:box_A] -> 1
             true -> 0
           end)
 

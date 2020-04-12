@@ -13,8 +13,8 @@ defmodule Cadex.Types do
                 simulation_parameters: %SimulationParameters{},
                 partial_state_update_blocks: [%PartialStateUpdateBlock{}]
               },
-              previous: %{},
-              current: %{},
+              previous_states: [],
+              current_state: %{},
               delta: %{}
   end
 

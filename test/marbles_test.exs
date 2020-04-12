@@ -46,8 +46,8 @@ defmodule MarblesTest do
                simulation_parameters: @simulation_parameters,
                partial_state_update_blocks: @partial_state_update_blocks
              },
-             previous: %{},
-             current: @initial_conditions,
+             previous_states: [],
+             current_state: @initial_conditions,
              delta: %{}
            } = state
   end
@@ -61,8 +61,8 @@ defmodule MarblesTest do
                simulation_parameters: @simulation_parameters,
                partial_state_update_blocks: @partial_state_update_blocks
              },
-             previous: %{},
-             current: %{box_A: 11, box_B: 0},
+             previous_states: [],
+             current_state: %{box_A: 11, box_B: 0},
              delta: %{box_A: func}
            } = state
 
@@ -78,8 +78,8 @@ defmodule MarblesTest do
                simulation_parameters: @simulation_parameters,
                partial_state_update_blocks: @partial_state_update_blocks
              },
-             previous: %{},
-             current: %{box_A: 11, box_B: 0},
+             previous_states: [],
+             current_state: %{box_A: 11, box_B: 0},
              delta: %{box_B: func}
            } = state
 
@@ -96,8 +96,8 @@ defmodule MarblesTest do
                simulation_parameters: @simulation_parameters,
                partial_state_update_blocks: @partial_state_update_blocks
              },
-             previous: %{box_A: 11, box_B: 0},
-             current: %{box_A: 10, box_B: 1},
+             previous_states: [%{box_A: 11, box_B: 0}],
+             current_state: %{box_A: 10, box_B: 1},
              delta: %{}
            } == Cadex.state()
 
@@ -110,8 +110,8 @@ defmodule MarblesTest do
                simulation_parameters: @simulation_parameters,
                partial_state_update_blocks: @partial_state_update_blocks
              },
-             previous: %{box_A: 10, box_B: 1},
-             current: %{box_A: 9, box_B: 2},
+             previous_states: [%{box_A: 11, box_B: 0}, %{box_A: 10, box_B: 1}],
+             current_state: %{box_A: 9, box_B: 2},
              delta: %{}
            } == Cadex.state()
   end

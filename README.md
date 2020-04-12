@@ -160,6 +160,14 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/cadex](https://hexdocs.pm/cadex).
 
+## Feature Parity
+
+- [X] Basic state updates (Robots and marbles tutorial 1)
+- [X] State history
+- [] Params passed to state update functions
+- [] Simulation substep passed to state update function
+- [] Policy functions applied
+
 ## Roadmap
 
 1. Keep experimenting

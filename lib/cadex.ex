@@ -12,7 +12,7 @@ defmodule Cadex do
         %Cadex.Types.State{} -> override
       end
 
-    {:ok, pid} = start_link(%{current_state: initial_state, impl: impl})
+    {:ok, pid} = start_link(%{model_state: initial_state, impl: impl})
     {:ok, pid}
   end
 
@@ -36,19 +36,19 @@ defmodule Cadex do
   GenServer.handle_call/3 callback
   """
 
-  def handle_call(:state, _from, %{current_state: current_state, impl: _impl} = state),
-    do: {:reply, current_state, state}
+  def handle_call(:state, _from, %{model_state: model_state, impl: _impl} = state),
+    do: {:reply, model_state, state}
 
   def handle_call(
         {:set_current, value},
         _from,
-        state = %{current_state: current_state, impl: _impl}
+        state = %{model_state: model_state, impl: _impl}
       ) do
-    {:reply, Map.put(current_state, :current, value), state}
+    {:reply, Map.put(model_state, :current, value), state}
   end
 
-  def handle_call(:reset_delta, _from, state = %{current_state: current_state, impl: _impl}) do
-    {:reply, Map.put(current_state, :delta, %{}), state}
+  def handle_call(:reset_delta, _from, state = %{model_state: model_state, impl: _impl}) do
+    {:reply, Map.put(model_state, :delta, %{}), state}
   end
 
   def handle_call(
@@ -56,18 +56,18 @@ defmodule Cadex do
         _from,
         state =
           %{
-            current_state: %Cadex.Types.State{current: _current, delta: delta} = current_state,
+            model_state: %Cadex.Types.State{previous_states: previous_states, current_state: current_state, delta: delta} = model_state,
             impl: impl
           } = state
       ) do
     Logger.info("Calculating state variable update for #{var}")
-    {:ok, function} = impl.update(var, current_state)
+    {:ok, function} = impl.update(var, %{}, -1, previous_states, current_state, %{})
     delta_ = %{var => function}
-    current_state_ = current_state |> Map.put(:delta, Map.merge(delta, delta_))
-    {:reply, current_state_, %{state | current_state: current_state_}}
+    model_state_ = model_state |> Map.put(:delta, Map.merge(delta, delta_))
+    {:reply, model_state_, %{state | model_state: model_state_}}
   end
 
-  def handle_call(:variables, _from, state = %{current_state: current_state, impl: _impl}) do
+  def handle_call(:variables, _from, state = %{model_state: model_state, impl: _impl}) do
     # TODO: handle case when more than one PSUB
     %Cadex.Types.State{
       sim: %{
@@ -75,12 +75,12 @@ defmodule Cadex do
           %Cadex.Types.PartialStateUpdateBlock{variables: variables} | _tail
         ]
       }
-    } = current_state
+    } = model_state
 
     {:reply, variables, state}
   end
 
-  def handle_call(:policies, _from, state = %{current_state: current_state, impl: _impl}) do
+  def handle_call(:policies, _from, state = %{model_state: model_state, impl: _impl}) do
     # TODO: handle case when more than one PSUB
     %Cadex.Types.State{
       sim: %{
@@ -88,7 +88,7 @@ defmodule Cadex do
           %Cadex.Types.PartialStateUpdateBlock{policies: policies} | _tail
         ]
       }
-    } = current_state
+    } = model_state
 
     {:reply, policies, state}
   end
@@ -97,7 +97,7 @@ defmodule Cadex do
         :apply,
         _from,
         %{
-          current_state: %Cadex.Types.State{current: current, delta: delta} = current_state,
+          model_state: %Cadex.Types.State{previous_states: previous_states, current_state: current_state, delta: delta} = model_state,
           impl: impl
         }
       ) do
@@ -108,19 +108,19 @@ defmodule Cadex do
           %Cadex.Types.PartialStateUpdateBlock{variables: variables} | _tail
         ]
       }
-    } = current_state
+    } = model_state
 
     reduced =
       variables
-      |> Enum.reduce(current, fn var, acc ->
+      |> Enum.reduce(current_state, fn var, acc ->
         Map.update(acc, var, nil, &delta[var].(&1))
       end)
 
-    {:reply, current_state,
+    {:reply, model_state,
      %{
-       current_state:
-         %Cadex.Types.State{current_state | previous: current}
-         ~>> [current: reduced]
+      model_state:
+         %Cadex.Types.State{model_state | previous_states: previous_states ++ [current_state]}
+         ~>> [current_state: reduced]
          ~>> [delta: %{}],
        impl: impl
      }}
