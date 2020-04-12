@@ -1,8 +1,5 @@
 defmodule Marbles do
-  alias Cadex.Types
-  use Cadex.Model
-  use Cadex.Decorators
-  import Cadex.Model
+  @behaviour Cadex.Behaviour
 
   @initial_conditions %{
     box_A: 11,
@@ -26,39 +23,19 @@ defmodule Marbles do
     T: 10
   }
 
-  def start do
-    {:ok, pid} = Marbles.start_link(%Cadex.Types.State{
+  @impl true
+  def config do
+    %Cadex.Types.State{
       sim: %{
         simulation_parameters: @simulation_parameters,
         partial_state_update_blocks: @partial_state_update_blocks
       },
       current: @initial_conditions
-    })
-    {:ok, pid}
+    }
   end
 
-  @moduledoc """
-  Documentation for Marbles Cadex example.
-  """
-
-  ### Marbles state update functions
-
-  @doc """
-  GenServer.handle_call/3 callback
-  """
-
-  def do_boxA do
-    IO.puts "Hello world"
-  end
-
-  # @state_update(:box_A)
-  @decorate state_update(:box_A)
-  def handle_call(
-        {:update, var},
-        _from,
-        state = %Cadex.Types.State{current: current, delta: delta}
-      ) do
-      when var == :box_A do
+  @impl true
+  def update(var = :box_A, _state = %Cadex.Types.State{current: current}) do
     increment =
       &(&1 +
           cond do
@@ -67,26 +44,11 @@ defmodule Marbles do
             true -> 0
           end)
 
-    delta_ = %{var => increment}
-
-    state_ =
-      state
-      |> Map.put(:delta, Map.merge(delta, delta_))
-
-    {
-      :reply,
-      state_,
-      state_
-    }
+    {:ok, increment}
   end
 
-  # @state_update(:box_b)
-  def handle_call(
-        {:update, var},
-        _from,
-        state = %Cadex.Types.State{current: current, delta: delta}
-      )
-      when var == :box_B do
+  @impl true
+  def update(var = :box_B, _state = %Cadex.Types.State{current: current}) do
     increment =
       &(&1 +
           cond do
@@ -95,16 +57,6 @@ defmodule Marbles do
             true -> 0
           end)
 
-    delta_ = %{var => increment}
-
-    state_ =
-      state
-      |> Map.put(:delta, Map.merge(delta, delta_))
-
-    {
-      :reply,
-      state_,
-      state_
-    }
+    {:ok, increment}
   end
 end

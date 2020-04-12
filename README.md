@@ -12,13 +12,7 @@ Designing a differential games engine also uses all the best features of the Eli
 
 ```elixir
 defmodule Marbles do
-  alias Cadex.Types
-  use Cadex.Model,
-    sim: %{
-      simulation_parameters: @simulation_parameters,
-      partial_state_update_blocks: @partial_state_update_blocks
-    },
-    initial_conditions: @initial_conditions
+  @behaviour Cadex.Behaviour
 
   @initial_conditions %{
     box_A: 11,
@@ -42,12 +36,19 @@ defmodule Marbles do
     T: 10
   }
 
-  def handle_call(
-        {:update, var},
-        _from,
-        state = %Cadex.Types.State{current: current, delta: delta}
-      )
-      when var == :box_A do
+  @impl true
+  def config do
+    %Cadex.Types.State{
+      sim: %{
+        simulation_parameters: @simulation_parameters,
+        partial_state_update_blocks: @partial_state_update_blocks
+      },
+      current: @initial_conditions
+    }
+  end
+
+  @impl true
+  def update(var = :box_A, _state = %Cadex.Types.State{current: current}) do
     increment =
       &(&1 +
           cond do
@@ -56,25 +57,11 @@ defmodule Marbles do
             true -> 0
           end)
 
-    delta_ = %{var => increment}
-
-    state_ =
-      state
-      |> Map.put(:delta, Map.merge(delta, delta_))
-
-    {
-      :reply,
-      state_,
-      state_
-    }
+    {:ok, increment}
   end
 
-  def handle_call(
-        {:update, var},
-        _from,
-        state = %Cadex.Types.State{current: current, delta: delta}
-      )
-      when var == :box_B do
+  @impl true
+  def update(var = :box_B, _state = %Cadex.Types.State{current: current}) do
     increment =
       &(&1 +
           cond do
@@ -83,17 +70,7 @@ defmodule Marbles do
             true -> 0
           end)
 
-    delta_ = %{var => increment}
-
-    state_ =
-      state
-      |> Map.put(:delta, Map.merge(delta, delta_))
-
-    {
-      :reply,
-      state_,
-      state_
-    }
+    {:ok, increment}
   end
 end
 ```
