@@ -1,6 +1,5 @@
 defmodule Marbles7 do
   @behaviour Cadex.Behaviour
-  require Logger
 
   @initial_conditions %{
     box_A: 10,
