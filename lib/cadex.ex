@@ -50,6 +50,7 @@ defmodule Cadex do
               end)
           end)
 
+        flush()
         %{run: run, result: result |> Enum.filter(fn x -> !is_nil(x) end)}
       end)
 
@@ -89,6 +90,10 @@ defmodule Cadex do
 
   def handle_call(:reset_delta, _from, state = %{model_state: model_state, impl: _impl}) do
     {:reply, Map.put(model_state, :delta, %{}), state}
+  end
+
+  def handle_call(:flush, _from, state = %{model_state: %Cadex.Types.State{sim: sim, previous_states: previous_states}, impl: _impl}) do
+    {:reply, :ok, %{state | model_state: %Cadex.Types.State{sim: sim, current_state: previous_states |> List.first}}}
   end
 
   def handle_call(
@@ -216,4 +221,6 @@ defmodule Cadex do
   def set_current(value), do: GenServer.call(__MODULE__, {:set_current, value})
   @spec reset_delta :: any
   def reset_delta, do: GenServer.call(__MODULE__, :reset_delta)
+  @spec flush :: any
+  def flush, do: GenServer.call(__MODULE__, :flush)
 end

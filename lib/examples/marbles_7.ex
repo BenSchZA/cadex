@@ -20,7 +20,7 @@ defmodule Marbles7 do
   ]
 
   @simulation_parameters %Cadex.Types.SimulationParameters{
-    T: 0..10,
+    T: 0..30,
     N: 50
   }
 

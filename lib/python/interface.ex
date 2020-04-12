@@ -3,11 +3,11 @@ defmodule PythonInterface do
 
   def plot(x1, x2) do
     {:ok, py} = Python.start(python_path: Path.expand("lib/python"))
-    result = py |> Python.call(marbles_plot(x1, x2), from_file: "pyplot")
+    py |> Python.call(marbles_plot(x1, x2), from_file: "pyplot")
+  end
 
-    # close the Python process
-    # py |> Python.close()
-
-    result
+  def plot_marble_runs(x1_runs, x2_runs) do
+    {:ok, py} = Python.start(python_path: Path.expand("lib/python"))
+    py |> Python.call(plot_marble_runs(x1_runs, x2_runs), from_file: "pyplot")
   end
 end

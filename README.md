@@ -35,7 +35,8 @@ defmodule Marbles7 do
   ]
 
   @simulation_parameters %Cadex.Types.SimulationParameters{
-    T: 50
+    T: 50,
+    N: 30
   }
 
   @impl true
@@ -103,6 +104,32 @@ Running the simulation:
 {:ok, _pid} = Cadex.start(Marbles7)
 {:ok, %Cadex.Types.State{} = state} = Cadex.run()
 ```
+
+Generate plot via `export`:
+
+```elixir
+{:ok, runs} = Cadex.run(debug=false)
+
+box_A_plots = runs |> Enum.map(fn %{run: _run, result: result} ->
+  result |> Enum.map(fn timestep ->
+    %{state: state} = timestep |> List.last
+    %{box_A: box_A} = state |> List.last
+    box_A
+  end)
+end)
+
+box_B_plots = runs |> Enum.map(fn %{run: _run, result: result} ->
+  result |> Enum.map(fn timestep ->
+    %{state: state} = timestep |> List.last
+    %{box_B: box_B} = state |> List.last
+    box_B
+  end)
+end)
+
+PythonInterface.plot_marble_runs(box_A_plots, box_B_plots)
+```
+
+![Robots and marbles plot][https://github.com/BenSchZA/cadex/raw/master/media/robots_and_marbles_plot.png]
 
 ## Development
 

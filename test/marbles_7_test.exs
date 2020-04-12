@@ -14,22 +14,25 @@ defmodule Marbles7Test do
   test "cadex run" do
     # %Cadex.Types.State{} = state
     profile do
-      assert {:ok, results} = Cadex.run(debug=false)
+      assert {:ok, runs} = Cadex.run(debug=false)
 
-      %{run: run, result: run_results} = results |> List.first
-      box_A_plot = run_results |> Enum.map(fn result ->
-        %{timestep: timestep, state: state} = result |> List.last
-        %{box_A: box_A, box_B: box_B} = state |> List.last
-        box_A
+      box_A_plots = runs |> Enum.map(fn %{run: _run, result: result} ->
+        result |> Enum.map(fn timestep ->
+          %{state: state} = timestep |> List.last
+          %{box_A: box_A} = state |> List.last
+          box_A
+        end)
       end)
 
-      box_B_plot = run_results |> Enum.map(fn result ->
-        %{timestep: timestep, state: state} = result |> List.last
-        %{box_A: box_A, box_B: box_B} = state |> List.last
-        box_B
+      box_B_plots = runs |> Enum.map(fn %{run: _run, result: result} ->
+        result |> Enum.map(fn timestep ->
+          %{state: state} = timestep |> List.last
+          %{box_B: box_B} = state |> List.last
+          box_B
+        end)
       end)
 
-      PythonInterface.plot(box_A_plot, box_B_plot)
+      PythonInterface.plot_marble_runs(box_A_plots, box_B_plots)
     end
   end
 end
