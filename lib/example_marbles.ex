@@ -35,6 +35,11 @@ defmodule Marbles do
   end
 
   @impl true
+  def policy(_params, _substep, _previous_states, _current_state) do
+    {:ok, %{}}
+  end
+
+  @impl true
   def update(var = :box_A, _params, _substep, _previous_states, current_state, _input) do
     increment =
       &(&1 +

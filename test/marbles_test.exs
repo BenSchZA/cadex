@@ -140,6 +140,7 @@ defmodule MarblesTest do
   end
 
   test "cadex run" do
-    assert {:ok, %Cadex.Types.State{} = _state} = Cadex.run()
+    assert {:ok, %Cadex.Types.State{} = state} = Cadex.run()
+    IO.inspect state
   end
 end
