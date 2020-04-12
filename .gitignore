@@ -24,3 +24,5 @@ predator_prey-*.tar
 
 .elixir_ls/
 Mnesia*/
+/priv/plts/*.plt
+/priv/plts/*.plt.hash

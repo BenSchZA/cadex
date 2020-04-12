@@ -4,7 +4,7 @@ defmodule Cadex do
   import StructPipe
   require Logger
 
-  @spec start(any, nil | Cadex.Types.State.t()) :: {:ok, any}
+  @spec start(any, nil | %Cadex.Types.State{}) :: {:ok, any}
   def start(impl, override \\ nil) do
     initial_state =
       case override do

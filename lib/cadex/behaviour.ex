@@ -1,5 +1,5 @@
 defmodule Cadex.Behaviour do
-  @callback config :: Cadex.Types.State.t()
+  @callback config :: %Cadex.Types.State{}
   # @callback policy()
   @callback update(
               var :: atom(),
