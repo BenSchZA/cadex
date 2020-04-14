@@ -131,6 +131,44 @@ PythonInterface.plot_marble_runs(box_A_plots, box_B_plots)
 
 ![Robots and marbles plot](https://github.com/BenSchZA/cadex/raw/master/media/robots_and_marbles_plot.png)
 
+### Partial State Update Blocks
+
+State variables can be atoms (`:foo`) or tuples (`{:foo, :bar}`). This allows us to pattern match, and have multiple state update functions for each variable, for example:
+
+```elixir
+  @partial_state_update_blocks [
+    %Cadex.Types.PartialStateUpdateBlock{
+      policies: [
+        :robot_1,
+        :robot_2
+      ],
+      variables: [
+        {:box_A, :function_1},
+        {:box_B, :function_1}
+      ]
+    },
+    %Cadex.Types.PartialStateUpdateBlock{
+      policies: [
+        :robot_1,
+        :robot_2
+      ],
+      variables: [
+        {:box_A, :function_2},
+        {:box_B, :function_2}
+      ]
+    }
+  ]
+```
+
+The above partial state update blocks would then pattern match to the following state update functions:
+
+```elixir
+def update({:box_A, :function_1}, _params, _substep, _previous_states, _current_state, input) do ...
+def update({:box_A, :function_2}, _params, _substep, _previous_states, _current_state, input) do ...
+def update{:box_B, :function_1}, _params, _substep, _previous_states, _current_state, input) do ...
+def update({:box_B, :function_2}, _params, _substep, _previous_states, _current_state, input) do ...
+```
+
 ## Development
 
 I've created a [Nix](https://nixos.org/nix/) shell for development, `shell.nix`. This includes all the dependencies you should need, and should work on both Linux and Mac - I've only tested it on Linux.

@@ -116,6 +116,9 @@ defmodule Cadex do
     {:reply, model_state_, %{state | model_state: model_state_}}
   end
 
+  defp get_first({a, _b}), do: a
+  defp get_first(a), do: a
+
   def handle_call(
         {:update, var, substep},
         _from,
@@ -132,7 +135,7 @@ defmodule Cadex do
       ) do
     Logger.debug("Calculating state variable update for #{var}")
     {:ok, function} = impl.update(var, %{}, substep, previous_states, current_state, signals)
-    delta_ = %{var => function}
+    delta_ = %{get_first(var) => function}
     model_state_ = model_state |> Map.put(:delta, Map.merge(delta, delta_))
     {:reply, model_state_, %{state | model_state: model_state_}}
   end
@@ -189,6 +192,7 @@ defmodule Cadex do
     reduced =
       variables
       |> Enum.reduce(current_state, fn var, acc ->
+        var = get_first(var)
         Map.update(acc, var, nil, &delta[var].(&1))
       end)
 

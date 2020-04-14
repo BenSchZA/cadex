@@ -13,7 +13,7 @@ defmodule Marbles7 do
         :robot_2
       ],
       variables: [
-        :box_A,
+        {:box_A, :a},
         :box_B
       ]
     }
@@ -66,7 +66,7 @@ defmodule Marbles7 do
   end
 
   @impl true
-  def update(_var = :box_A, _params, _substep, _previous_states, _current_state, input) do
+  def update(_var = {:box_A, :a}, _params, _substep, _previous_states, _current_state, input) do
     %{add_to_A: add_to_A} = input
     increment = &(&1 + add_to_A)
 
