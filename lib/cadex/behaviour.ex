@@ -9,7 +9,7 @@ defmodule Cadex.Behaviour do
             ) ::
               {:ok, %{optional(atom()) => any()}} | {:error, String.t()}
   @callback update(
-              var :: atom(),
+              var :: atom() | {atom(), atom()},
               params :: %{optional(atom()) => any()},
               substep :: integer,
               previous_states :: %{optional(atom()) => any()},

@@ -17,7 +17,7 @@ defmodule Cadex.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :export],
+      extra_applications: [:logger, :export, :crypto],
       mod: {Cadex.Application, []}
     ]
   end

@@ -43,8 +43,8 @@ defmodule Cadex do
                                 policies: policies,
                                 variables: variables
                               }, substep} ->
-                policies |> Enum.each(&policy(&1, substep))
-                variables |> Enum.each(&update(&1, substep))
+                policies |> Enum.each(&policy(&1, timestep, substep))
+                variables |> Enum.each(&update(&1, timestep, substep))
                 %Cadex.Types.State{previous_states: previous_states} = apply()
                 %{timestep: timestep, substep: substep, state: previous_states}
               end)
@@ -97,7 +97,7 @@ defmodule Cadex do
   end
 
   def handle_call(
-        {:policy, type, substep},
+        {:policy, type, timestep, substep},
         _from,
         state = %{
           model_state:
@@ -111,7 +111,7 @@ defmodule Cadex do
         }
       ) do
     Logger.debug("Applying policy #{type}")
-    {:ok, signals_} = impl.policy(type, %{}, substep, previous_states, current_state)
+    {:ok, signals_} = impl.policy(type, %{}, substep, previous_states, Map.put(current_state, :timestep, timestep))
     model_state_ = model_state |> Map.put(:signals, Map.merge(signals, signals_))
     {:reply, model_state_, %{state | model_state: model_state_}}
   end
@@ -120,7 +120,7 @@ defmodule Cadex do
   defp get_first(a), do: a
 
   def handle_call(
-        {:update, var, substep},
+        {:update, var, timestep, substep},
         _from,
         state = %{
           model_state:
@@ -134,7 +134,7 @@ defmodule Cadex do
         }
       ) do
     Logger.debug("Calculating state variable update for #{var}")
-    {:ok, function} = impl.update(var, %{}, substep, previous_states, current_state, signals)
+    {:ok, function} = impl.update(var, %{}, substep, previous_states, Map.put(current_state, :timestep, timestep), signals)
     delta_ = %{get_first(var) => function}
     model_state_ = model_state |> Map.put(:delta, Map.merge(delta, delta_))
     {:reply, model_state_, %{state | model_state: model_state_}}
@@ -212,9 +212,9 @@ defmodule Cadex do
   @spec state :: any
   def state, do: GenServer.call(__MODULE__, :state)
   @spec policy(any, any) :: any
-  def policy(type, substep \\ 0), do: GenServer.call(__MODULE__, {:policy, type, substep})
+  def policy(type, timestep \\ 0, substep \\ 0), do: GenServer.call(__MODULE__, {:policy, type, timestep, substep})
   @spec update(any, any) :: any
-  def update(var, substep \\ 0), do: GenServer.call(__MODULE__, {:update, var, substep})
+  def update(var, timestep \\ 0, substep \\ 0), do: GenServer.call(__MODULE__, {:update, var, timestep, substep})
   @spec variables :: any
   def variables, do: GenServer.call(__MODULE__, :variables)
   @spec policies :: any

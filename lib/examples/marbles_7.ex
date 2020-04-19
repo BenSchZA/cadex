@@ -14,7 +14,17 @@ defmodule Marbles7 do
       ],
       variables: [
         {:box_A, :a},
-        :box_B
+        {:box_B, :a}
+      ]
+    },
+    %Cadex.Types.PartialStateUpdateBlock{
+      policies: [
+        :robot_1,
+        :robot_2
+      ],
+      variables: [
+        {:box_A, :b},
+        {:box_B, :b}
       ]
     }
   ]
@@ -74,7 +84,22 @@ defmodule Marbles7 do
   end
 
   @impl true
-  def update(_var = :box_B, _params, _substep, _previous_states, _current_state, input) do
+  def update(_var = {:box_B, :a}, _params, _substep, _previous_states, _current_state, input) do
+    %{add_to_B: add_to_B} = input
+    increment = &(&1 + add_to_B)
+
+    {:ok, increment}
+  end
+
+  def update(_var = {:box_A, :b}, _params, _substep, _previous_states, _current_state, input) do
+    %{add_to_A: add_to_A} = input
+    increment = &(&1 + add_to_A)
+
+    {:ok, increment}
+  end
+
+  @impl true
+  def update(_var = {:box_B, :b}, _params, _substep, _previous_states, _current_state, input) do
     %{add_to_B: add_to_B} = input
     increment = &(&1 + add_to_B)
 
