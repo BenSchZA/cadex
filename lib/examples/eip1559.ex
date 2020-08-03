@@ -1,5 +1,6 @@
 defmodule EIP1559 do
   @behaviour Cadex.Behaviour
+  alias Cadex.Types.{State, SimulationParameters, PartialStateUpdateBlock}
 
   @timesteps 300
   @constants %{
@@ -34,14 +35,14 @@ defmodule EIP1559 do
   end
 
   @partial_state_update_blocks [
-    %Cadex.Types.PartialStateUpdateBlock{
+    %PartialStateUpdateBlock{
       policies: [
       ],
       variables: [
         {:demand, :update_demand_scenario}
       ]
     },
-    %Cadex.Types.PartialStateUpdateBlock{
+    %PartialStateUpdateBlock{
       policies: [
         :include_valid_txs
       ],
@@ -54,14 +55,14 @@ defmodule EIP1559 do
     },
   ]
 
-  @simulation_parameters %Cadex.Types.SimulationParameters{
+  @simulation_parameters %SimulationParameters{
     T: 0..@timesteps,
     N: 1
   }
 
   @impl true
   def config do
-    %Cadex.Types.State{
+    %State{
       sim: %{
         simulation_parameters: @simulation_parameters,
         partial_state_update_blocks: @partial_state_update_blocks

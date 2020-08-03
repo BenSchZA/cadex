@@ -2,7 +2,7 @@ defmodule Marbles7 do
   @behaviour Cadex.Behaviour
 
   @initial_conditions %{
-    box_A: 10,
+    box_A: 11,
     box_B: 0
   }
 

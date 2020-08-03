@@ -26,3 +26,4 @@ predator_prey-*.tar
 Mnesia*/
 /priv/plts/*.plt
 /priv/plts/*.plt.hash
+**/__pycache__

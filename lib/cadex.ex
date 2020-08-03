@@ -1,15 +1,23 @@
 defmodule Cadex do
   use GenServer
-  alias Cadex.Types
+  alias Cadex.Types.{State, SimulationParameters, PartialStateUpdateBlock}
   import StructPipe
   require Logger
 
-  @spec start(any, nil | %Cadex.Types.State{}) :: {:ok, any}
+  @spec start(any, nil | %State{}) :: {:ok, any}
   def start(impl, override \\ nil) do
-    initial_state =
+    initial_state = %State{
+      sim: %{
+        simulation_parameters: %SimulationParameters{
+          T: _range,
+          N: _runs,
+          M: _sweep
+        }
+      }
+    } =
       case override do
         nil -> impl.config()
-        %Cadex.Types.State{} -> override
+        %State{} -> override
       end
 
     {:ok, pid} = start_link(%{model_state: initial_state, impl: impl})
@@ -30,7 +38,8 @@ defmodule Cadex do
     end
 
     results =
-      Enum.map(1..runs, fn run ->
+      Flow.from_enumerable(1..runs)
+      |> Flow.map(fn run ->
         result =
           Enum.map(range, fn
             0 ->
@@ -45,14 +54,15 @@ defmodule Cadex do
                               }, substep} ->
                 policies |> Enum.each(&policy(&1, timestep, substep))
                 variables |> Enum.each(&update(&1, timestep, substep))
-                %Cadex.Types.State{previous_states: previous_states} = apply()
-                %{timestep: timestep, substep: substep, state: previous_states}
+                %Cadex.Types.State{current_state: current_state} = apply()
+                %{timestep: timestep, substep: substep, state: current_state}
               end)
           end)
 
         flush()
         %{run: run, result: result |> Enum.filter(fn x -> !is_nil(x) end)}
       end)
+      |> Enum.into([])
 
     {:ok, results}
   end
@@ -133,7 +143,7 @@ defmodule Cadex do
           impl: impl
         }
       ) do
-    Logger.debug("Calculating state variable update for #{var}")
+    Logger.debug("Calculating state variable update for #{inspect(var)}")
     {:ok, function} = impl.update(var, %{}, substep, previous_states, Map.put(current_state, :timestep, timestep), signals)
     delta_ = %{get_first(var) => function}
     model_state_ = model_state |> Map.put(:delta, Map.merge(delta, delta_))
