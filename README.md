@@ -257,7 +257,8 @@ be found at [https://hexdocs.pm/cadex](https://hexdocs.pm/cadex).
 ## Feature Parity
 
 - [X] Basic state updates & policy functions (Robots and marbles tutorial 7)
-- [ ] Monte carlo simulations / parameter sweeps
+- [X] Monte carlo simulations
+- [ ] Parameter sweeps
 
 ## Roadmap
 
